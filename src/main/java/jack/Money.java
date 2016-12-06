@@ -3,34 +3,49 @@ package jack;
 /**
  * Created by root on 16. 11. 16.
  */
-public abstract class Money {
+public class Money implements Expression{
     protected int amount;
+    protected String currency;
 
-    public Money(int amount) {
+    public Money(int amount, String currency) {
         this.amount = amount;
+        this.currency = currency;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
         Money money = (Money) o;
-        return amount == money.amount;
+        return amount == money.amount && currency().equals(money.currency);
+    }
+
+    public static Money dollar(int amount) {
+        return new Money(amount,"USD");
+    }
+
+    public static Money franc(int amount) {
+        return new Money(amount,"CHF");
+    }
+
+    public Expression times(int multiplier) {
+        return new Money(amount * multiplier,currency);
+    }
+
+    public String currency() {
+        return this.currency;
     }
 
     @Override
-    public int hashCode() {
-        return amount;
+    public String toString() {
+        return amount + " " + currency;
     }
 
-
-    public static Money dollar(int amount) {
-        return new Dollar(amount);
-    }
-    public static Money franc(int amount) {
-        return new Franc(amount);
+    public Expression plus(Expression addend) {
+        return new Sum(this,addend);
     }
 
-    abstract public Money times(int multiplier);
-    abstract public String currency();
+    @Override
+    public Money reduce(Bank bank,String to) {
+        int rate = bank.rate(currency,to);
+        return new Money(amount/rate, to);
+    }
 }
